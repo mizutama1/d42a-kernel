@@ -131,3 +131,23 @@
   - `source_url` の既定値を上記 Release アセットに設定
   - tar 内に `./kernel-4.14/msm-4.14/` があればその部分だけ展開（容量・時間節約）
 - 初回ビルド実行: run id `45052030473`
+
+## 追記 (2026-11-23 03:55) ビルド成功・検証完了
+- Actions run `45055605113` **success**（3回の失敗を修正して到達）
+  1. `scripts/gcc-wrapper.py` が python2 かつ「警告=即エラー」→ `CC=` でラッパー回避
+  2. 純正 clang 10 が `libtinfo.so.5` を要求 → workflow で libtinfo5 を導入（focal deb フォールバック付き）
+  3. `undefined reference to path_umount`（KernelSU Makefile の sed backport がビルド順序で race）
+     → `apply_manual_hooks.py` で fs/namespace.c + fs/internal.h に事前挿入
+- 成果物（artifact `boot-ksu` 46MB, id 14767852402）を `work/ksu/` に保存
+  - `boot-ksu.img` 16,154,624 B
+  - `Image.gz` 14,920,512 B / `Image` 35,095,040 B
+- 検証結果:
+  - bootimg.py で unpack 成功（header v2, page 4096）
+  - **ramdisk / dtb は純正とバイト一致**（差分は kernel のみ）
+  - Image は ARM64 magic `ARMd`、`Linux version 4.14.190-perf (clang 10.0.7 for Android NDK ...)`、`KernelSU` 文字列あり
+  - config 差分は **2点のみ**:
+    - `CONFIG_MODULE_SIG_FORCE`: y → not set（純正 vendor .ko を読み込むため必須）
+    - `CONFIG_KSU=y` + `CONFIG_KSU_MANUAL_HOOK=y`（他は純正と同一）
+  - ビルドログ: `KernelSU-Next version: 33327`, `tag: v3.4.0-legacy`, `Hook mode: Manual`
+- 端末は現在 adb にも fastboot にも見えない（recovery で battery/USB 切断の可能性）
+  → 電源長押しで再起動してもらい、`adb reboot bootloader` → `fastboot boot work/ksu/boot-ksu.img` で非破壊テスト

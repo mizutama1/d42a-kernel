@@ -70,3 +70,9 @@
 - 830MB tar を GitHub Release `src-4.14.190` にアップロード（2.85MB/s, 201）
 - build.sh / workflow を manual hook + 純正 toolchain 対応に更新、push (7cea931)
 - Actions を workflow_dispatch で実行 → run 45052030473
+
+### 03:30-03:55 ビルド成功
+- run2: libtinfo.so.5 不足で失敗 → workflow に libtinfo5 導入
+- run3: コンパイルは完走、リンクで path_umount 未定義 → namespace backport を事前適用
+- run4 (45055605113): success。artifact 取得 → ramdisk/dtb が純正一致、config 差分 2 点のみを確認
+- work/ksu/boot-ksu.img に保存
