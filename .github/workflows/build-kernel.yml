@@ -5,9 +5,9 @@ on:
   workflow_dispatch:
     inputs:
       source_url:
-        description: "カーネルソース tar.gz 等の URL（空ならリポジトリ内のソースを使用）"
+        description: "カーネルソース tar の URL（空ならリポジトリ内のソースを使用）"
         required: false
-        default: ""
+        default: "https://github.com/mizutama1/d42a-kernel/releases/download/src-4.14.190/d42a-src.tar"
       kernel_dir:
         description: "カーネルソースのディレクトリ（空なら自動検出）"
         required: false
@@ -54,15 +54,24 @@ jobs:
         run: |
           mkdir -p source
           curl -L --retry 3 --retry-delay 5 -o /tmp/kernel-src.tar.gz "${{ inputs.source_url }}"
-          tar -xf /tmp/kernel-src.tar.gz -C source
-          echo "--- extracted ---"
-          ls -la source | head -20
+          ls -lh /tmp/kernel-src.tar.gz
+          # Lenovo OSS tar は ./kernel-4.14/msm-4.14 を含む → カーネル部分だけ展開して時間と容量を節約
+          if tar -tf /tmp/kernel-src.tar.gz | grep -q '^\./kernel-4.14/msm-4.14/' ; then
+            echo "kernel subtree only"
+            tar -xf /tmp/kernel-src.tar.gz -C source ./kernel-4.14/msm-4.14
+          else
+            echo "full extract"
+            tar -xf /tmp/kernel-src.tar.gz -C source
+          fi
+          echo "--- detected Makefiles ---"
+          find source -maxdepth 4 -name Makefile | head -5
+          df -h /
 
       - name: Show toolchain
         run: |
-          clang --version
-          aarch64-linux-gnu-as --version | head -1
-          aarch64-linux-gnu-ld --version | head -1
+          clang --version || true
+          aarch64-linux-gnu-as --version | head -1 || true
+          find source -maxdepth 4 -name clang -path '*build_tools*' | head -3
 
       - name: Build kernel + repack boot.img
         env:
@@ -78,5 +87,6 @@ jobs:
           path: |
             out/boot-ksu.img
             out/Image.gz
+            out/Image
             out/kernel.config
             out/build.log

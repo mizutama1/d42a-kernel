@@ -1,0 +1,168 @@
+partition-type:fsc:raw
+partition-size:fsc: 0x20000
+partition-type:fsg:raw
+partition-size:fsg: 0x200000
+partition-type:modemst2:raw
+partition-size:modemst2: 0x200000
+partition-type:modemst1:raw
+partition-size:modemst1: 0x200000
+partition-type:ALIGN_TO_128K_2:raw
+partition-size:ALIGN_TO_128K_2: 0x1A000
+partition-type:tsnv:raw
+partition-size:tsnv: 0x1000000
+partition-type:oemowninfo:raw
+partition-size:oemowninfo: 0x100000
+partition-type:catecontentfv:raw
+partition-size:catecontentfv: 0x100000
+partition-type:catefv:raw
+partition-size:catefv: 0x80000
+partition-type:secdata:raw
+partition-size:secdata: 0x7000
+partition-type:uefivarstore:raw
+partition-size:uefivarstore: 0x80000
+partition-type:multiimgqti:raw
+partition-size:multiimgqti: 0x8000
+partition-type:multiimgoem:raw
+partition-size:multiimgoem: 0x8000
+partition-type:storsec:raw
+partition-size:storsec: 0x20000
+partition-type:logdump:raw
+partition-size:logdump: 0x4000000
+partition-type:rawdump:raw
+partition-size:rawdump: 0x8000000
+partition-type:cateloader:raw
+partition-size:cateloader: 0x200000
+partition-type:logfs:raw
+partition-size:logfs: 0x800000
+partition-type:toolsfv:raw
+partition-size:toolsfv: 0x100000
+partition-type:limits:raw
+partition-size:limits: 0x1000
+partition-type:mlsp:raw
+partition-size:mlsp: 0x8000
+partition-type:splash:raw
+partition-size:splash: 0x20A4000
+partition-type:spunvm:raw
+partition-size:spunvm: 0x800000
+partition-type:apdp:raw
+partition-size:apdp: 0x40000
+partition-type:dip:raw
+partition-size:dip: 0x100000
+partition-type:devinfo:raw
+partition-size:devinfo: 0x1000
+partition-type:uefisecappbak:raw
+partition-size:uefisecappbak: 0x200000
+partition-type:imagefvbak:raw
+partition-size:imagefvbak: 0x200000
+partition-type:dtbobak:raw
+partition-size:dtbobak: 0x1800000
+partition-type:vbmetabak:raw
+partition-size:vbmetabak: 0x10000
+partition-type:qupfwbak:raw
+partition-size:qupfwbak: 0x10000
+partition-type:devcfgbak:raw
+partition-size:devcfgbak: 0x20000
+partition-type:cmnlib64bak:raw
+partition-size:cmnlib64bak: 0x80000
+partition-type:cmnlibbak:raw
+partition-size:cmnlibbak: 0x80000
+partition-type:bootbak:raw
+partition-size:bootbak: 0x4000000
+partition-type:keymasterbak:raw
+partition-size:keymasterbak: 0x80000
+partition-type:dspbak:raw
+partition-size:dspbak: 0x2000000
+partition-type:ablbak:raw
+partition-size:ablbak: 0x100000
+partition-type:mdtpbak:raw
+partition-size:mdtpbak: 0x2000000
+partition-type:mdtpsecappbak:raw
+partition-size:mdtpsecappbak: 0x400000
+partition-type:bluetoothbak:raw
+partition-size:bluetoothbak: 0x100000
+partition-type:modembak:raw
+partition-size:modembak: 0xB400000
+partition-type:hypbak:raw
+partition-size:hypbak: 0x80000
+partition-type:tzbak:raw
+partition-size:tzbak: 0x400000
+partition-type:rpmbak:raw
+partition-size:rpmbak: 0x80000
+partition-type:uefisecapp:raw
+partition-size:uefisecapp: 0x200000
+partition-type:imagefv:raw
+partition-size:imagefv: 0x200000
+partition-type:dtbo:raw
+partition-size:dtbo: 0x1800000
+partition-type:vbmeta:raw
+partition-size:vbmeta: 0x10000
+partition-type:qupfw:raw
+partition-size:qupfw: 0x10000
+partition-type:devcfg:raw
+partition-size:devcfg: 0x20000
+partition-type:cmnlib64:raw
+partition-size:cmnlib64: 0x80000
+partition-type:cmnlib:raw
+partition-size:cmnlib: 0x80000
+partition-type:boot:raw
+partition-size:boot: 0x4000000
+partition-type:keymaster:raw
+partition-size:keymaster: 0x80000
+partition-type:dsp:raw
+partition-size:dsp: 0x2000000
+partition-type:abl:raw
+partition-size:abl: 0x100000
+partition-type:mdtp:raw
+partition-size:mdtp: 0x2000000
+partition-type:mdtpsecapp:raw
+partition-size:mdtpsecapp: 0x400000
+partition-type:bluetooth:raw
+partition-size:bluetooth: 0x100000
+partition-type:modem:raw
+partition-size:modem: 0xB400000
+partition-type:hyp:raw
+partition-size:hyp: 0x80000
+partition-type:tz:raw
+partition-size:tz: 0x400000
+partition-type:rpm:raw
+partition-size:rpm: 0x80000
+partition-type:ddr:raw
+partition-size:ddr: 0x100000
+partition-type:cdt:raw
+partition-size:cdt: 0x20000
+partition-type:ALIGN_TO_128K_1:raw
+partition-size:ALIGN_TO_128K_1: 0x1A000
+partition-type:xbl_configbak:raw
+partition-size:xbl_configbak: 0x20000
+partition-type:xblbak:raw
+partition-size:xblbak: 0x380000
+partition-type:xbl_config:raw
+partition-size:xbl_config: 0x20000
+partition-type:xbl:raw
+partition-size:xbl: 0x380000
+partition-type:userdata:f2fs
+partition-size:userdata: 0xC34DD3000
+partition-type:cache:ext4
+partition-size:cache: 0x10000000
+partition-type:metadata:ext4
+partition-size:metadata: 0x1000000
+partition-type:vbmeta_systembak:raw
+partition-size:vbmeta_systembak: 0x10000
+partition-type:vbmeta_system:raw
+partition-size:vbmeta_system: 0x10000
+partition-type:recoverybak:raw
+partition-size:recoverybak: 0x6000000
+partition-type:recovery:raw
+partition-size:recovery: 0x6000000
+partition-type:super:raw
+partition-size:super: 0x180000000
+partition-type:frp:raw
+partition-size:frp: 0x80000
+partition-type:keystore:raw
+partition-size:keystore: 0x80000
+partition-type:misc:raw
+partition-size:misc: 0x100000
+partition-type:persist:raw
+partition-size:persist: 0x2000000
+partition-type:ssd:raw
+partition-size:ssd: 0x2000
