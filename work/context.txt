@@ -193,3 +193,26 @@
   cat work\context.txt   # このファイル
 
 ================================================================================
+
+================================================================================
+ ★ 重要な方針転換 (2026-11-23 05:45)
+   ユーザー要望により「本家 KernelSU (tiann/KernelSU)」で作り直した。
+   以後の作業は新プロジェクトで行う:
+
+   プロジェクト: C:\Users\yuuki\project\d42a-kernelsu-official
+   リポジトリ  : https://github.com/mizutama1/d42a-kernelsu-official
+   状態ファイル: work/state.md / work/log.md / work/next-steps.txt
+
+   - 本家 KernelSU v0.9.5（非 GKI 最終版）を in-tree 組み込み
+   - Actions run 45065888204 で 2 種類ビルド成功・検証済み
+       A) work\ksu\kprobe\boot-ksu.img … CONFIG_KPROBES=y（公式推奨）
+       B) work\ksu\manual\boot-ksu.img … KPROBES off + manual hook（予備）
+     どちらも純正 ramdisk/DTB とバイト一致、config 差分は KSU/KPROBES と
+     MODULE_SIG_FORCE 無効化のみ
+   - マネージャ: d42a-kernelsu-official\work\tools\KernelSU_v0.9.5_11872-release.apk
+   - 未実施: 実機テスト（端末が USB 未接続のため）
+     手順は d42a-kernelsu-official\work\next-steps.txt を参照
+
+   このプロジェクト (d-42akarnelsu) の KernelSU-Next 版は参考・予備として残す。
+   KernelSU-Next 版 boot.img: work\ksu\boot-ksu.img（検証済み）
+================================================================================
