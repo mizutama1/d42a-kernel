@@ -91,14 +91,16 @@ log "ビルド開始"
 JOBS="$(nproc)"
 if [ -x "$KD/build_tools/bin/clang" ]; then
   echo "toolchain: 純正 build_tools (clang + aarch64-linux-android-4.9) を使用"
+  # NOTE: 純正の scripts/gcc-wrapper.py は python2 製で、かつ「警告 = 即エラー」なので
+  #       CC を直接 clang に向けてラッパーを回避する（純正 Kernel_build.sh は REAL_CC 経由）
   export PATH="$KD/build_tools/aarch64-linux-android-4.9/bin:$PATH"
   MAKEVARS=(
     ARCH=arm64 O=out
+    CC="$KD/build_tools/bin/clang"
     CROSS_COMPILE=aarch64-linux-android-
     DTC_EXT="$KD/build_tools/dtc"
     DTC_OVERLAY_TEST_EXT="$KD/build_tools/ufdt_apply_overlay"
     CONFIG_BUILD_ARM64_DT_OVERLAY=y
-    REAL_CC="$KD/build_tools/bin/clang"
     CLANG_TRIPLE=aarch64-linux-gnu-
   )
 else
