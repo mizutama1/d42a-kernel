@@ -102,3 +102,32 @@
 - 未対応: 4.14 では `KSU_KPROBES_HOOK` 非推奨（Kconfig に「5.10 未満では使うな」）かつ
   `KSU_SYSCALL_TABLE_HOOK` は 4.17+ 必須 → **`KSU_MANUAL_HOOK=y` + ソースへのパッチ**が本命。
   ソース入手後に build.sh / patches を差し替える。
+
+## 追記 (2026-11-23 03:00) 純正カーネルソース入手・manual hook 対応・初回ビルド
+- ソース: `C:\Users\yuuki\project\d-42akarnelsu\d_42a_d_42a_opensource_build_no_d_42a_s_s203037_2212092223_jp.tar` (830,024,222 B)
+  - 中身は **Android フルツリー**。カーネルは `./kernel-4.14/msm-4.14`（71,717 ファイル）
+  - `VERSION=4 PATCHLEVEL=14 SUBLEVEL=190`
+  - `Kernel_build.sh` が純正ビルド手順:
+    `KERNEL_DEFCONFIG=vendor/trinket_defconfig`, `PATH=build_tools/aarch64-linux-android-4.9/bin`,
+    `REAL_CC=build_tools/bin/clang`, `CLANG_TRIPLE=aarch64-linux-gnu-`,
+    `DTC_EXT=build_tools/dtc`, `DTC_OVERLAY_TEST_EXT=build_tools/ufdt_apply_overlay`
+  - 純正ツールチェーン（clang 10 / gcc 4.9 / dtc）が `msm-4.14/build_tools/` に同梱
+- ソースは GitHub Releases にアップロード済み（リポジトリに 830MB を置かないため）:
+  `https://github.com/mizutama1/d42a-kernel/releases/download/src-4.14.190/d42a-src.tar`
+- 4.14 は kprobe hook 不可（Kconfig に「5.10 未満では使うな」）、syscall table hook も 4.17+ 必須
+  → **CONFIG_KSU_MANUAL_HOOK=y + 5 ファイルへのパッチ**を実装
+  パッチ: `d42a/patches/apply_manual_hooks.py`（fs/exec.c ×2, fs/open.c, fs/read_write.c,
+  fs/stat.c, kernel/reboot.c に `ksu_handle_*` 呼び出しを挿入。冪等・アンカー一致検査付き）
+  KernelSU-Next 側の関数シグネチャは現行 legacy に合わせた（例: `ksu_handle_sys_read(unsigned int fd)`）
+- **重要な修正**: 純正 config は `CONFIG_MODULE_SIG_FORCE=y`。そのまま再ビルドすると署名鍵が変わり
+  純正 vendor .ko が全滅するため、`MODULE_SIG_FORCE` を **無効化**する（MODULE_SIG 自体は維持）
+  併せて `LOCALVERSION="-perf"` / `MODVERSIONS=y` / `PREEMPT=y` を維持して vermagic を一致させる
+- build.sh 改修:
+  - ソース自動検出を最大 6 階層に拡張（`source/kernel-4.14/msm-4.14` を検出）
+  - 純正 `build_tools` があればそれを優先使用（無ければシステム clang）
+  - config は `d42a_defconfig`（実機 .config そのまま）+ scripts/config で差分調整
+  - boot.img は純正 ramdisk/DTB を維持して kernel のみ差し替え
+- GitHub Actions workflow 改修:
+  - `source_url` の既定値を上記 Release アセットに設定
+  - tar 内に `./kernel-4.14/msm-4.14/` があればその部分だけ展開（容量・時間節約）
+- 初回ビルド実行: run id `45052030473`

@@ -41,7 +41,13 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y --no-install-recommends \
             bc bison flex libssl-dev libelf-dev python3 zip unzip \
-            gcc-aarch64-linux-gnu ca-certificates
+            gcc-aarch64-linux-gnu ca-certificates git
+          # 純正 build_tools の clang 10 は libtinfo.so.5 を要求（jammy は libtinfo6 のみ）
+          sudo apt-get install -y libtinfo5 || {
+            echo "libtinfo5 が apt に無いため focal の deb を使用"
+            curl -fL -o /tmp/libtinfo5.deb http://archive.ubuntu.com/ubuntu/pool/universe/n/ncurses/libtinfo5_6.2-0ubuntu2.1_amd64.deb
+            sudo dpkg -i /tmp/libtinfo5.deb
+          }
 
       - name: Install clang (NDK r23b = clang 12)
         run: |

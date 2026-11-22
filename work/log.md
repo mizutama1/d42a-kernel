@@ -61,3 +61,12 @@
 - `POST /user/repos` で `mizutama1/d42a-kernel` (public) を作成
 - `git push` 成功（15.00 MiB pack、stock_boot.img 64MB は 50MB 超警告のみ）
 - Actions workflow `build-kernel` が active で登録されたことを API で確認
+
+### 02:40-03:00 ソース入手〜ビルド実行
+- ユーザー提供の Lenovo OSS tar (830MB) を受領。中身は Android フルツリー、カーネルは kernel-4.14/msm-4.14
+- 必要ファイルを選択展開して manual hook のアンカーを確認
+- KernelSU-Next legacy の実装を確認（ksu_handle_* のシグネチャ、Kbuild の自動 backport）
+- `d42a/patches/apply_manual_hooks.py` を作成し、5 ファイルで適用・冪等性を検証
+- 830MB tar を GitHub Release `src-4.14.190` にアップロード（2.85MB/s, 201）
+- build.sh / workflow を manual hook + 純正 toolchain 対応に更新、push (7cea931)
+- Actions を workflow_dispatch で実行 → run 45052030473
