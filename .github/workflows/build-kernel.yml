@@ -1,0 +1,82 @@
+name: build-kernel
+
+# 手動実行のみ（Actions タブ → Run workflow）
+on:
+  workflow_dispatch:
+    inputs:
+      source_url:
+        description: "カーネルソース tar.gz 等の URL（空ならリポジトリ内のソースを使用）"
+        required: false
+        default: ""
+      kernel_dir:
+        description: "カーネルソースのディレクトリ（空なら自動検出）"
+        required: false
+        default: ""
+      extra_configs:
+        description: "追加で有効化する CONFIG 名（空白区切り）"
+        required: false
+        default: ""
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-22.04
+    timeout-minutes: 180
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: Free disk space
+        run: |
+          sudo rm -rf /usr/share/dotnet /usr/local/lib/android /opt/ghc \
+                      /usr/local/share/boost /opt/hostedtoolcache 2>/dev/null || true
+          df -h /
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            bc bison flex libssl-dev libelf-dev python3 zip unzip \
+            gcc-aarch64-linux-gnu ca-certificates
+
+      - name: Install clang (NDK r23b = clang 12)
+        run: |
+          curl -L --retry 3 -o /tmp/ndk.zip https://dl.google.com/android/repository/android-ndk-r23b-linux.zip
+          unzip -q /tmp/ndk.zip -d /opt
+          echo "/opt/android-ndk-r23b/toolchains/llvm/prebuilt/linux-x86_64/bin" >> "$GITHUB_PATH"
+
+      - name: Download kernel source (optional)
+        if: ${{ inputs.source_url != '' }}
+        run: |
+          mkdir -p source
+          curl -L --retry 3 --retry-delay 5 -o /tmp/kernel-src.tar.gz "${{ inputs.source_url }}"
+          tar -xf /tmp/kernel-src.tar.gz -C source
+          echo "--- extracted ---"
+          ls -la source | head -20
+
+      - name: Show toolchain
+        run: |
+          clang --version
+          aarch64-linux-gnu-as --version | head -1
+          aarch64-linux-gnu-ld --version | head -1
+
+      - name: Build kernel + repack boot.img
+        env:
+          KERNEL_DIR: ${{ inputs.kernel_dir }}
+          EXTRA_CONFIGS: ${{ inputs.extra_configs }}
+        run: bash d42a/build.sh
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: boot-ksu
+          if-no-files-found: error
+          path: |
+            out/boot-ksu.img
+            out/Image.gz
+            out/kernel.config
+            out/build.log

@@ -1,0 +1,11 @@
+work/orig/
+work/boot/
+work/notes/
+work/tools/*.apk
+work/tools/*.zip
+work/tools/usb_driver/
+work/tools/usb_driver_custom/
+out/
+*.img
+!d42a/boot/stock_boot.img
+*.log
