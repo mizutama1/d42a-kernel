@@ -54,3 +54,10 @@
 - boot.img 末尾の AVB footer / 埋め込み vbmeta (0xF60000, 0x380) を確認
 - Magisk v31.1 / KernelSU-Next v3.4.2 manager / Zygisk Next 1.5.3 / Zygisk Assistant 2.1.4 を取得
 - KernelSU-Next legacy の non-GKI 手順を notes/ksun_legacy.md に保存
+
+### 02:20-02:30 GitHub
+- `git init` → commit（scaffold / docs）
+- GitHub device flow で認証（gh CLI の公開 client_id 使用、token はローカル保存・非表示）
+- `POST /user/repos` で `mizutama1/d42a-kernel` (public) を作成
+- `git push` 成功（15.00 MiB pack、stock_boot.img 64MB は 50MB 超警告のみ）
+- Actions workflow `build-kernel` が active で登録されたことを API で確認

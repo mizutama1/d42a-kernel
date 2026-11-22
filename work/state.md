@@ -90,3 +90,15 @@
   - kprobe 方式: setup.sh legacy + CONFIG_KPROBES/KPROBE_EVENTS/KSU_KPROBE_HOOKS/KSU=y
   - 純正 config は KPROBES 無効なので、ビルド時に有効化が必要
 - KernelSU-Next は v3.4.2 が最新
+
+## 追記 (2026-11-23 02:30) GitHub リポジトリ作成・push 完了
+- GitHub アカウント: `mizutama1`（device flow で認証、token は `~/.d42a_gh_token` に 600 で保存）
+- リポジトリ: **https://github.com/mizutama1/d42a-kernel**（Public）
+- push 済み: `.github/workflows/build-kernel.yml`（Actions で active を確認）, `d42a/` 一式, work の md/ツール
+- ローカル git: branch `main`, origin 追跡設定済み（credential helper は token ファイル参照）
+- Actions 実行方法: リポジトリ → Actions → build-kernel → Run workflow
+  - `source_url` に Lenovo カーネルソース tar.gz の URL を指定（未 push の場合）
+  - `kernel_dir` は空で自動検出
+- 未対応: 4.14 では `KSU_KPROBES_HOOK` 非推奨（Kconfig に「5.10 未満では使うな」）かつ
+  `KSU_SYSCALL_TABLE_HOOK` は 4.17+ 必須 → **`KSU_MANUAL_HOOK=y` + ソースへのパッチ**が本命。
+  ソース入手後に build.sh / patches を差し替える。
