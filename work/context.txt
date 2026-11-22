@@ -1,0 +1,195 @@
+================================================================================
+ d-42A (dtab Compact / Lenovo ELF-8605L) KernelSU 化プロジェクト 引き継ぎ情報
+ 最終更新: 2026-11-23 02:35
+ プロジェクト: C:\Users\yuuki\project\d-42akarnelsu
+================================================================================
+
+■ 0. ゴール
+  - d-42A を KernelSU (KernelSU-Next) で root 化
+  - GitHub Actions でカーネルをビルド
+  - Zygisk Next 等で root 検出を回避
+  - 純正 boot.img / カーネルソースの入手
+  - 破壊的削除はしない（ファイル削除は要確認）
+
+■ 1. 実機情報（adb / fastboot で実測）
+  serial            : HA18JVX3
+  model             : d-42A  (Lenovo ELF-8605L / Type ZA7N / docomo dtab Compact)
+  SoC               : trinket / SM6125 (Snapdragon 665)
+  OS                : Android 12 (SDK 31)
+  build             : d-42A_S_S203037_2212092223_JP / SKQ1.220201.001
+  fingerprint       : Lenovo/d-42A/d-42A:12/SKQ1.220201.001/d-42A_S_S203037_2212092223_JP:user/release-keys
+  kernel            : 4.14.190-perf+ #1 SMP PREEMPT Sat Dec 10 01:49:30 CST 2022 aarch64
+  compiler          : clang 10.0.7 (Android NDK) / GNU ld 2.27 / build host e144aefd64fc
+  A/B               : なし（A-only, ro.boot.slot_suffix 空）
+  bootloader        : unlocked (verifiedbootstate=orange, ro.boot.flash.locked=0, sys.oem_unlock_allowed=1)
+  root              : なし（su / Magisk なし）
+  shell から block dev: 読めない（/dev/block/sde11 は 0600 root:root）
+  USB VID/PID       : 通常 18D1:4EE7 / fastboot 18D1:D00D
+
+  パーティション主要:
+    boot      = /dev/block/sde11 (0x4000000 = 64MB)
+    bootbak   = /dev/block/sde30 (64MB)
+    recovery  = 96MB, recoverybak = 96MB
+    dtbo      = 0x1800000 (24MB)
+    vbmeta    = 0x10000, vbmeta_system = 0x10000
+    super     = 0x180000000 (6GB)
+    userdata  = f2fs
+  詳細: work/notes/partitions.txt（168行）
+
+■ 2. 現在の端末状態（要注意）
+  - `fastboot reboot recovery` で recovery に入れたが、recovery の adb は「unauthorized」
+    （/data 未マウントで adb_keys が読めない。sideload も不可）
+  - fastboot からも制御不可 → **本体の電源ボタン 10〜15 秒長押し**で再起動が必要
+  - 復旧は fastboot で純正イメージ書き戻し可能（下記 7.）
+  - 再起動後は通常の Android に戻る（adb は以前の認証鍵で通るはず）
+
+■ 3. 成果物（すべてローカル、削除禁止）
+  C:\Users\yuuki\project\d-42akarnelsu\
+    work\orig\d-42A_S_S203037_2212092223_JP.zip
+        純正ファーム 2,287,941,964 B
+        https://mirrors-obs-1.lolinet.com/firmware/lenowow/2020/docomo/D-42A/d-42A_S_S203037_2212092223_JP.zip
+    work\orig\fw\            上記から抽出
+        boot.img (64MB), recovery.img (96MB), dtbo.img, vbmeta.img, vbmeta_system.img,
+        NON-HLOS.bin, misc.img, gpt_main0.bin, gpt_backup0.bin,
+        prog_firehose_ddr.elf, prog_firehose_lite.elf,
+        rawprogram1-5.xml, rawprogram_unsparse0.xml, patch0-5.xml, CheckSum.ini
+    work\boot\kernel          boot.img の kernel 部 (gzip, 14,887,248 B)
+    work\boot\kernel.raw      展開済み ARM64 Image (35,095,040 B)
+    work\boot\ramdisk         gzip ramdisk (709,145 B)
+    work\boot\dtb             515,277 B（9個の DTB 連結）
+    work\boot\config.txt      IKCONFIG から抽出した実カーネル .config (160,393 B)
+    work\boot\overlays\       dtbo 内の 4 overlay DTB
+    work\boot\dtbo_table.txt
+    work\tools\bootimg.py     boot image v0/v1/v2 unpack/repack（純正 boot.img で round-trip 完全一致を検証済み）
+    work\tools\Magisk-v31.1.apk
+    work\tools\KernelSU-Next-manager.apk (v3.4.2)
+    work\tools\Zygisk-Next-1.5.3.zip
+    work\tools\Zygisk-Assistant-2.1.4.zip
+    work\tools\usb_driver_custom\android_winusb.inf
+        Google USB Driver に 18D1:D00D / Class_FF&SubClass_42&Prot_03 を追記したもの
+        （Windows の fastboot 用ドライバ。pnputil で oem5.inf としてインストール済み）
+    work\notes\ksun_legacy.md KernelSU-Next non-GKI 手順の控え
+    work\notes\partitions.txt
+    work\state.md / work\todo.md / work\log.md
+
+■ 4. boot.img 解析結果
+  header version 2, page size 4096
+  kernel_addr 0x8000, ramdisk_addr 0x1000000, dtb_addr 0x1f00000
+  kernel 14,887,248 (gzip) / ramdisk 709,145 (gzip) / dtb 515,277
+  recovery_dtbo なし
+  cmdline:
+    androidboot.hardware=qcom androidboot.memcg=1 lpm_levels.sleep_disabled=1
+    video=vfb:640x400,bpp=32,memsize=3072000 msm_rtb.filter=0x237 service_locator.enable=1
+    swiotlb=1 loop.max_part=7 cgroup.memory=nokmem,nosocket
+    androidboot.fstab_suffix=default buildvariant=user
+  boot 末尾:
+    AVB footer "AVBf" @ 0x3FFFF00, original_image_size=0x00F60000 (16,121,856),
+    vbmeta_offset=0x00F60000, vbmeta_size=0x380（boot 内に埋め込み vbmeta）
+    → unlocked なので検証は事実上無効。Magisk 等と同じ扱い。
+  dtb は 9 個の連結。8 番目が trinket SoC (338,521 B)。
+  デバイス固有設定は dtbo.img の overlay 側。
+    パネル: qcom,mdss_dsi_td4330_truly_cmd / _video, hx83112a_truly, nt36672_truly,
+            hx82790_boe_fhd, sim（Qualcomm trinket QRD 系）
+    touch : synaptics_tcm / himax_ts / focaltech
+    SAR   : abov_sar
+    battery: 4602692_LC_ATL_P500_5000mAH_PMI632
+
+■ 5. カーネル config の要点（work/boot/config.txt）
+  CONFIG_LOCALVERSION="-perf"        → release は 4.14.190-perf+
+  CONFIG_MODULES=y
+  CONFIG_MODVERSIONS=y               → vendor .ko は完全一致必須
+  CONFIG_MODULE_SIG=y / MODULE_SIG_ALL=y
+  CONFIG_KPROBES は未設定（# CONFIG_KPROBES is not set）
+  CONFIG_KALLSYMS=y / KALLSYMS_ALL=y
+  CONFIG_IKCONFIG=y / IKCONFIG_PROC=y
+  CONFIG_STATIC_USERMODEHELPER=y / STATIC_USERMODEHELPER_PATH=""
+  CONFIG_PREEMPT=y / CONFIG_SMP=y / CONFIG_SECURITY_SELINUX=y
+  CONFIG_BUILD_ARM64_KERNEL_COMPRESSION_GZIP=y
+
+■ 6. KernelSU 方針（重要）
+  - KernelSU 公式 1.0+ は非 GKI 非対応。最終対応は v0.9.5。
+  - 採用: KernelSU-Next `legacy` ブランチ（4.4〜6.x、manual hook 対応、v3.4.2）
+  - 4.14 では以下が使えない/非推奨:
+      CONFIG_KSU_KPROBES_HOOK … Kconfig に「5.10 未満では使うな」と明記
+      CONFIG_KSU_SYSCALL_TABLE_HOOK … kernel >= 4.17 必須（本機は 4.14）
+    → **CONFIG_KSU_MANUAL_HOOK=y** + カーネルソースへのパッチ（exec.c / open.c /
+      read_write.c / stat.c / reboot.c 等）が本命。ソース入手後に適用。
+  - 参考手順: https://kernelsu-next.github.io/webpage/pages/how-to-integrate-for-non-gki.html
+  - 組込み: カーネルツリーで
+      curl -LSs "https://raw.githubusercontent.com/KernelSU-Next/KernelSU-Next/next/kernel/setup.sh" | bash -s legacy
+    （legacy ブランチが clone される）
+  - 注意: 純正 config は STATIC_USERMODEHELPER_PATH="" なので ksud 実行は問題ない見込み
+
+■ 7. ビルド / 書き込み / 復旧
+  GitHub リポジトリ: https://github.com/mizutama1/d42a-kernel （Public）
+    - Actions workflow `build-kernel`（active）
+    - 認証: device flow で取得。token は ~/.d42a_gh_token に 600 で保存（値は書かない）
+    - ローカル git は branch main / origin 追跡済み・credential helper 設定済み
+    - ローカル commit 済み: scaffold, docs（2ce06d7 が最新）
+  リポジトリ内容:
+    .github/workflows/build-kernel.yml
+    d42a/build.sh                … ソース自動検出 → KernelSU-Next 組込み → ビルド → boot.img 再構築
+    d42a/config/d42a_defconfig   … 純正 .config をそのまま defconfig 化
+    d42a/boot/stock_boot.img     … 純正 boot.img（ramdisk/DTB 供給元・復旧用）
+    d42a/tools/bootimg.py
+    work/ の md / ツール類
+
+  Actions 実行:
+    Actions → build-kernel → Run workflow
+      source_url    … Lenovo ソース tar.gz の URL（リポジトリに入れない場合）
+      kernel_dir    … 空でOK（Makefile + arch/arm64 + VERSION=4 を最大4階層まで自動検出）
+      extra_configs … 例 "KSU_MANUAL_HOOK"
+    成果物 artifact `boot-ksu`: boot-ksu.img / Image.gz / kernel.config / build.log
+
+  ツールチェーン（workflow 内）:
+    ubuntu-22.04, clang は NDK r23b (clang 12), binutils は gcc-aarch64-linux-gnu
+    make ARCH=arm64 O=out CC=clang CROSS_COMPILE=aarch64-linux-gnu- CLANG_TRIPLE=aarch64-linux-gnu- KCFLAGS=-Wno-error
+
+  書き込み:
+    adb reboot bootloader
+    fastboot boot boot-ksu.img          # 非破壊テスト（失敗しても再起動で戻る）
+    fastboot flash boot boot-ksu.img    # 問題なければ本適用
+    fastboot reboot
+
+  復旧（純正に戻す）:
+    fastboot flash boot d42a/boot/stock_boot.img
+    （フル復旧は work/orig/fw/ の boot/recovery/super_* を fastboot flash、または EDL + firehose）
+
+  fastboot が「Error（ドライバ無し）」になったら:
+    work/tools/usb_driver_custom/android_winusb.inf を pnputil /add-driver ... /install（要 UAC 昇格）
+    → USB\VID_18D1&PID_D00D\HA18JVX3 を削除 → /scan-devices
+
+■ 8. 未解決 / 次にやること
+  1) 端末を recovery から復帰（電源長押し）→ adb 復帰確認
+  2) Lenovo カーネルソースの入手（ユーザーがダウンロード中）
+     - ソースの tar.gz URL or ローカルパスを受け取る
+     - 中身のレイアウト確認（kernel/ か msm-4.14/ か、VERSION=4.14.190 か）
+  3) KernelSU-Next legacy を **manual hook** 構成に変更
+     - d42a/build.sh の config を KSU_MANUAL_HOOK=y に変更（KPROBES は入れない）
+     - 必要パッチを d42a/patches/ に用意し、build.sh から git apply
+  4) Actions 実行 → boot-ksu.img 取得 → fastboot boot で検証 → flash
+  5) root 化後:
+     - KernelSU-Next マネージャ (work/tools/KernelSU-Next-manager.apk) インストール
+     - Zygisk Next (work/tools/Zygisk-Next-1.5.3.zip) を Modules から導入 → 再起動
+     - Zygisk Assistant (2.1.4) 導入 → 再起動 → 検出テスト
+  6) 保険: 純正ソースが入手できない/ビルド不能なら Magisk で root（boot.img パッチ）
+     - 純正 boot.img は手元にあり、いつでも実行可能
+
+■ 9. 調査で分かった外部情報
+  - Lenovo OSS ポータル: https://support.lenovo.com/us/en/solutions/HT511330
+    d-42A / dtab のソースは掲載なし。旧 opensource.lenovo.com は NXDOMAIN。
+  - 製品ページ: https://pcsupport.lenovo.com/us/en/products/tablets/a-series/d-42a-elf-8605l/za7n
+    Downloads に Open Source Code の項目なし
+  - GitHub toromame8373/d-42A_kernel は空（size 0）
+  - ファーム配布: lolinet ミラー（上記）が最新 S203037 を無料公開
+  - その他ファーム: halabtech / romdevelopers / needrom（有料・要ログイン）
+  - EDL 用 firehose プログラマは純正ファームに同梱済み（prog_firehose_ddr.elf）
+
+■ 10. 再開時の最初のコマンド
+  cd C:\Users\yuuki\project\d-42akarnelsu
+  work\state.md / work\todo.md / work\log.md を読む
+  adb devices            # 端末が戻っているか
+  git status             # リポジトリ状態
+  cat work\context.txt   # このファイル
+
+================================================================================
