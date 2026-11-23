@@ -76,3 +76,12 @@
 - run3: コンパイルは完走、リンクで path_umount 未定義 → namespace backport を事前適用
 - run4 (45055605113): success。artifact 取得 → ramdisk/dtb が純正一致、config 差分 2 点のみを確認
 - work/ksu/boot-ksu.img に保存
+
+## 2026-11-23 18:00 本家 KernelSU v0.9.5 で root 化完了（実機）
+- 採用: `d42a-kernelsu-official/work/ksu/manual/boot-ksu.img`（manual hook 版）を `fastboot flash boot`
+- kprobe 版は `su -c "cmd arg"` が ENOENT で失敗 → manual 版に決定
+- マネージャ: 動作中 / 11872 / スーパーユーザー 1 / モジュール 2
+- Zygisk Next 1.5.3 + Zygisk Assistant 2.1.4 導入済み（zn-nsdaemon 稼働）
+- Release: https://github.com/mizutama1/d42a-kernelsu/releases/tag/ksu-v0.9.5-nongki
+- 備考: この環境では `git push` がハング（ls-remote は成功）→ GitHub API で更新
+- 復旧: `fastboot flash boot d42a/boot/stock_boot.img`
